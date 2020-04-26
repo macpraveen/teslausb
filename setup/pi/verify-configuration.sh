@@ -108,7 +108,7 @@ function check_setup_teslausb () {
   if ! grep selfupdate /root/bin/setup-teslausb > /dev/null
   then
     setup_progress "setup-teslausb is outdated, attempting update"
-    if curl --fail -s -o /root/bin/setup-teslausb.new https://raw.githubusercontent.com/marcone/teslausb/main-dev/setup/pi/setup-teslausb
+    if curl --fail -s -o /root/bin/setup-teslausb.new https://raw.githubusercontent.com/macpraveen/teslausb/main-dev/setup/pi/setup-teslausb
     then
       if /root/bin/remountfs_rw > /dev/null && mv /root/bin/setup-teslausb.new /root/bin/setup-teslausb && chmod +x /root/bin/setup-teslausb
       then
@@ -125,7 +125,7 @@ function check_setup_teslausb () {
 
 check_supported_hardware
 
-check_setup_teslausb
+# check_setup_teslausb
 
 check_variable "camsize"
 

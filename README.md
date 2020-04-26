@@ -23,7 +23,7 @@ This fork contains the following improvements compared to the upstream [cimryan/
 
 ## Installing
 
-It is recommended to use the [prebuilt image](https://github.com/marcone/teslausb/releases) and [one step setup instructions](https://github.com/marcone/teslausb/blob/main-dev/doc/OneStepSetup.md) to get started, as the instructions below may be outdated.
+It is recommended to use the [prebuilt image](https://github.com/macpraveen/teslausb/releases) and [one step setup instructions](https://github.com/macpraveen/teslausb/blob/main-dev/doc/OneStepSetup.md) to get started, as the instructions below may be outdated.
 
 If you've never worked with Raspberry Pi before, don't know what a Windows share is, or just want to see what this is all about, check out this YouTube video:
 
@@ -31,7 +31,7 @@ If you've never worked with Raspberry Pi before, don't know what a Windows share
 
 Note that archiving the clips can take from seconds to hours depending on how many clips you've saved and how strong the WiFi signal is in your Tesla. If you find that the clips aren't getting completely transferred before the car powers down after you park or before you leave you can use the Tesla app to turn on the Climate control. This will send power to the Raspberry Pi, allowing it to complete the archival operation.
 
-Alternatively, you can provide your Tesla account credentials and VIN in TeslaUSB's settings, which will allow it to use the [Tesla API](https://tesla-api.timdorr.com) to keep the car awake while the files transfer. Instructions are available in the [one step setup instructions](https://github.com/marcone/teslausb/blob/main-dev/doc/OneStepSetup.md)
+Alternatively, you can provide your Tesla account credentials and VIN in TeslaUSB's settings, which will allow it to use the [Tesla API](https://tesla-api.timdorr.com) to keep the car awake while the files transfer. Instructions are available in the [one step setup instructions](https://github.com/macpraveen/teslausb/blob/main-dev/doc/OneStepSetup.md)
 
 ## Contributing
 
@@ -67,7 +67,7 @@ Optional:
 
 Download: [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/)
 
-**NOTE:** it is highly recommended that you use the [prebuilt teslausb image](https://github.com/marcone/teslausb/releases) instead and follow the [one step headless setup process](doc/OneStepSetup.md).
+**NOTE:** it is highly recommended that you use the [prebuilt teslausb image](https://github.com/macpraveen/teslausb/releases) instead and follow the [one step headless setup process](doc/OneStepSetup.md).
 
 Download and install: [Etcher](http://etcher.io)
 
@@ -85,11 +85,11 @@ There are four phases to setting up the Pi:
 3. Set up the archive for dashcam clips.
 4. Set up the USB storage functionality.
 
-**AGAIN:** it is highly recommended that you use the [prebuilt teslausb image](https://github.com/marcone/teslausb/releases) instead and follow the [one step headless setup process](doc/OneStepSetup.md).
+**AGAIN:** it is highly recommended that you use the [prebuilt teslausb image](https://github.com/macpraveen/teslausb/releases) instead and follow the [one step headless setup process](doc/OneStepSetup.md).
 
 ### Get the OS onto the MicroSD card
 
-**LAST WARNING:** it is highly recommended that you use the [prebuilt teslausb image](https://github.com/marcone/teslausb/releases) instead and follow the [one step headless setup process](doc/OneStepSetup.md).
+**LAST WARNING:** it is highly recommended that you use the [prebuilt teslausb image](https://github.com/macpraveen/teslausb/releases) instead and follow the [one step headless setup process](doc/OneStepSetup.md).
 
 [These instructions](https://www.raspberrypi.org/documentation/installation/installing-images/README.md) tell you how to get Raspbian onto your MicroSD card. Basically:
 1. Connect your Micro SD card to your computer.
@@ -163,7 +163,7 @@ Make sure that whatever you speicfy for the new hostname is compliant with the r
     ```
     mkdir -p /root/bin
     cd /root/bin
-    wget https://raw.githubusercontent.com/marcone/teslausb/main-dev/setup/pi/setup-teslausb
+    wget https://raw.githubusercontent.com/macpraveen/teslausb/main-dev/setup/pi/setup-teslausb
     chmod +x setup-teslausb
     ./setup-teslausb
     ```

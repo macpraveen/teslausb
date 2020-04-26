@@ -1,0 +1,105 @@
+#!/bin/bash -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+# Print the IP address
+_IP=$(hostname -I) || true
+if [ "$_IP" ]
+then
+  printf "My IP address is %s\n" "$_IP"
+fi
+
+
+SETUP_LOGFILE=/boot/teslausb-headless-setup.log
+
+function setup_progress () {
+  echo "$( date ) : $1" >> "$SETUP_LOGFILE" || echo "can't write to $SETUP_LOGFILE"
+  echo "$1"
+}
+
+function setup_ap_ssid_pass () {
+  if [ ! -e /root/TESLAUSB_AP_MODE_SETUP_FINISHED ]
+  then
+    if [ ! -e "/boot/teslausb_setup_variables.conf" ]
+    then
+      # remountfs_rw
+      /root/bin/remountfs_rw
+
+      # rename sample as conf file
+      mv /boot/teslausb_setup_variables.conf.sample /boot/teslausb_setup_variables.conf
+      local mac_addr
+      mac_addr=$(cat /sys/class/net/wlan0/address)
+      # remove ":" in mac addr
+      mac_addr="${mac_addr//:/}"
+      local ap_ssid="TC-${mac_addr}"
+      local ap_pass=${mac_addr}
+      # replace YOUR_AP_SSID and YOUR_AP_PASSWORD with AP_SSID and AP_PASSWORD
+      sed -i -e "s/YOUR_AP_SSID/$ap_ssid/g" /boot/teslausb_setup_variables.conf
+      sed -i -e "s/YOUR_AP_PASSWORD/$ap_pass/g" /boot/teslausb_setup_variables.conf
+      
+      mv /boot/teslausb_setup_variables.conf /root/
+      dos2unix /root/teslausb_setup_variables.conf
+      source "/root/teslausb_setup_variables.conf"
+
+      # configure ap mode
+      /root/bin/configure-ap.sh
+      reboot
+    fi
+  fi
+}
+
+# this replaces YOUR_AP_SSID with TC-<mac addr> and password as <mac addr>
+setup_ap_ssid_pass
+
+if [ -e "/boot/teslausb_setup_variables.conf" ]
+then
+  if [ -e /root/bin/remountfs_rw ]
+  then
+    /root/bin/remountfs_rw
+  fi
+  mv /boot/teslausb_setup_variables.conf /root/
+  dos2unix /root/teslausb_setup_variables.conf
+fi
+if [ -e "/root/teslausb_setup_variables.conf" ]
+then
+  source "/root/teslausb_setup_variables.conf"
+fi
+
+# Check for headless setup
+if [ -z "${HEADLESS_SETUP+x}" ]
+then
+  HEADLESS_SETUP=false
+fi
+
+/root/bin/run-setup-teslausb
+
+# run this only after web setup has finished
+if [ -e /mutable/TESLAUSB_WEB_SETUP_FINISHED ]
+then
+  /root/bin/enable_wifi
+
+  mkdir -p /mutable/pm2
+  export PM2_HOME='/mutable/pm2'
+  # max file size of 1 mb
+  pm2 set pm2-logrotate:max_size 1M
+  # retain last 12 files
+  pm2 set pm2-logrotate:retain 12
+  # compress log files
+  pm2 set pm2-logrotate:compress true
+  # run every hour
+  pm2 set pm2-logrotate:rotateInterval '* */1 * * *'
+
+  PM2_HOME='/mutable/pm2' pm2 start --env production /root/src/RP4/ecosystem.config.js
+
+fi
+
+exit 0

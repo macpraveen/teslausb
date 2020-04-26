@@ -37,7 +37,7 @@ function check_archive_mountable () {
   fi
 
   local tmp_credentials_file_path="/tmp/teslaCamArchiveCredentials"
-  /root/bin/write-archive-configs-to.sh "$tmp_credentials_file_path"
+  /root/bin/${ARCHIVE_SYSTEM:-none}_archive/write-archive-configs-to.sh "$tmp_credentials_file_path"
 
   local mounted=false
   local try_versions="${cifs_version:-@@ default 3.0 2.1 2.0 1.0}"
@@ -87,7 +87,7 @@ function check_archive_mountable () {
 
 function install_required_packages () {
   log_progress "Installing/updating required packages if needed"
-  apt-get -y --force-yes install hping3
+  # apt-get -y --force-yes install hping3
   log_progress "Done"
 }
 
@@ -114,7 +114,7 @@ function configure_archive () {
   fi
 
   local credentials_file_path="/root/.teslaCamArchiveCredentials"
-  /root/bin/write-archive-configs-to.sh "$credentials_file_path"
+  /root/bin/${ARCHIVE_SYSTEM:-none}_archive/write-archive-configs-to.sh "$credentials_file_path"
 
   if ! grep -w -q "$archive_path" /etc/fstab
   then

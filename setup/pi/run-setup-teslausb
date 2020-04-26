@@ -1,0 +1,73 @@
+#!/bin/bash -eu
+
+function setup_progress () {
+  local setup_logfile=/boot/teslausb-headless-setup.log
+  if [ $HEADLESS_SETUP = "true" ] && [ -w $setup_logfile ]
+  then
+    echo "$( date ) : $*" >> "$setup_logfile"
+  fi
+  echo "$@"
+}
+
+function run_setup_teslausb () {
+  # Good to start setup at this point
+
+  # This begins the Headless Setup loop
+  # If the FINISHED file does not exist then we start setup. Otherwise passes on to normal loop
+  if [ ! -e "/boot/TESLAUSB_SETUP_FINISHED" ] && [ $HEADLESS_SETUP = "true" ]
+  then
+    if [ -e /root/bin/remountfs_rw ]
+    then
+      /root/bin/remountfs_rw
+    fi
+    touch "/boot/TESLAUSB_SETUP_STARTED"
+
+    # Grab the setup variables. Should still be there since setup isn't finished.
+    # This is a double check to cover various scenarios of mixed headless/not headless setup attempts
+    if [ -e "/boot/teslausb_setup_variables.conf" ] && [ ! -e  "/root/teslausb_setup_variables.conf" ]
+    then
+      mv /boot/teslausb_setup_variables.conf /root/
+      dos2unix /root/teslausb_setup_variables.conf
+    fi
+    if [ -e "/root/teslausb_setup_variables.conf" ]
+    then
+      source "/root/teslausb_setup_variables.conf"
+    else
+      # No conf file found, can't complete setup
+      setup_progress "Setup appears not to have completed, but you didn't provide a teslausb_setup_variables.conf."
+    fi
+
+    setup_progress "Starting setup."
+
+    # Start setup. This should take us all the way through to reboot
+    /root/bin/setup-teslausb
+
+    # reboot for good measure, also restarts the rc.local script
+    reboot
+  fi
+
+  # if setup finished run archive loop
+  run_archive_loop
+}
+
+function log () {
+  echo "$( date ) ${1}" >> "$LOGFILE"
+}
+
+function run_archive_loop () {
+  if [ -e "/root/bin/archiveloop" ]
+  then
+    log "Launching archival script..."
+    /root/bin/archiveloop &
+    log "All done"
+  else
+    echo "Setup doesn't seem to have completed, there is no /root/bin/archiveloop."
+    echo "Try re-running /root/bin/setup-teslausb (re-downloading if needed),"
+    echo "or export HEADLESS_SETUP=true and run /etc/rc.local if you want to run automatic setup."
+    echo "(you may also need to rm /boot/TESLAUSB_SETUP_FINISHED to force setup to re-run)"
+  fi
+}
+
+LOGFILE=/tmp/rc.local.log
+
+run_setup_teslausb

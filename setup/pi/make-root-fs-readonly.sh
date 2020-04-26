@@ -29,7 +29,8 @@ apt-get remove -y --force-yes --purge triggerhappy logrotate dphys-swapfile
 apt-get -y --force-yes autoremove --purge
 # Replace log management with busybox (use logread if needed)
 log_progress "Installing ntp and busybox-syslogd..."
-apt-get -y --force-yes install ntp busybox-syslogd; dpkg --purge rsyslog
+# apt-get -y --force-yes install ntp busybox-syslogd
+dpkg --purge rsyslog
 
 log_progress "Configuring system..."
 

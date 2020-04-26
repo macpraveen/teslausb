@@ -94,7 +94,7 @@ def _rest_request(url, method=None, data=None):
         data = {}
     headers = {
       'Authorization': 'Bearer {}'.format(_get_api_token()),
-      'User-Agent': 'github.com/marcone/teslausb',
+      'User-Agent': 'github.com/macpraveen/teslausb',
     }
 
     _log("Sending {} Request: {}; Data: {}".format(method, url, data))
@@ -158,7 +158,7 @@ def _get_api_token():
           'password': SETTINGS['tesla_password']
         }
         headers = {
-            'User-Agent': 'github.com/marcone/teslausb',
+            'User-Agent': 'github.com/macpraveen/teslausb',
         }
         _log('Retrieving new API token...')
         # Useful for debugging credential issues
@@ -197,7 +197,7 @@ def _refresh_api_token(refresh_token):
       'refresh_token': refresh_token,
     }
     headers = {
-        'User-Agent': 'github.com/marcone/teslausb',
+        'User-Agent': 'github.com/macpraveen/teslausb',
     }
     _log('Refreshing API token...')
     response = requests.post(oauth_url, headers=headers, data=data)

@@ -5,7 +5,7 @@
 # This is probably a model to follow, similar to some of the
 # reorganization work going on with the main scripts.
 
-HEADLESS_SETUP=false
+HEADLESS_SETUP=true
 
 if [ -e "/boot/teslausb-headless-setup.log" ]
 then
@@ -34,9 +34,26 @@ function enable_wifi () {
         fi
         setup_progress "Wifi variables specified, and no /boot/WIFI_ENABLED. Building wpa_supplicant.conf."
         cp /boot/wpa_supplicant.conf.sample /boot/wpa_supplicant.conf
-        sed -i'.bak' -e "sTEMPSSID${SSID}g" /boot/wpa_supplicant.conf
-        sed -i'.bak' -e "sTEMPPASS${WIFIPASS}g" /boot/wpa_supplicant.conf
+        sed -i'.bak' -e "s/TEMPSSID/${SSID}/g" /boot/wpa_supplicant.conf
+        sed -i'.bak' -e "s/TEMPPASS/${WIFIPASS}/g" /boot/wpa_supplicant.conf
         cp /boot/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf
+        
+
+        if [ -e "/root/teslausb_setup_variables.conf" ]
+        then
+          source "/root/teslausb_setup_variables.conf"
+        fi
+        
+        # set the host name now if possible, so it's effective immediately after the reboot
+        local old_host_name
+        old_host_name=$(cat /etc/hostname)
+        if [[ -n "$TESLAUSB_HOSTNAME" ]] && [[ "$TESLAUSB_HOSTNAME" != "$old_host_name" ]]
+        then
+          local new_host_name="$TESLAUSB_HOSTNAME"
+          sed -i -e "s/$old_host_name/$new_host_name/g" /etc/hosts
+          sed -i -e "s/$old_host_name/$new_host_name/g" /etc/hostname
+        fi
+        
         touch /boot/WIFI_ENABLED
         setup_progress "Rebooting..."
         reboot

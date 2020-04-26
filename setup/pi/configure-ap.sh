@@ -2,6 +2,36 @@
 
 # based on https://blog.thewalr.us/2017/09/26/raspberry-pi-zero-w-simultaneous-ap-and-managed-mode-wifi/
 
+function configure_hostname () {
+  local new_host_name="$TESLAUSB_HOSTNAME"
+  local old_host_name
+  old_host_name=$(hostname)
+
+  # Set the specified hostname if it differs from the current name
+  if [ "$new_host_name" != "$old_host_name" ]
+  then
+    setup_progress "Configuring the hostname..."
+    sed -i -e "s/$old_host_name/$new_host_name/g" /etc/hosts
+    sed -i -e "s/$old_host_name/$new_host_name/g" /etc/hostname
+    while ! hostnamectl set-hostname "$new_host_name"
+    do
+      setup_progress "hostnamectl failed, retrying"
+      sleep 1
+    done
+    systemctl restart avahi-daemon
+    setup_progress "Configured hostname: $(hostname)"
+  fi
+}
+
+function setup_progress () {
+  local setup_logfile=/boot/teslausb-headless-setup.log
+  if [ $HEADLESS_SETUP = "true" ] && [ -w $setup_logfile ]
+  then
+    echo "$( date ) : $*" >> "$setup_logfile"
+  fi
+  echo "$@"
+}
+
 function log_progress () {
   if declare -F setup_progress > /dev/null
   then
@@ -24,12 +54,12 @@ fi
 
 if ! grep -q id_str /etc/wpa_supplicant/wpa_supplicant.conf
 then
-  IP=${AP_IP:-"192.168.66.1"}
+  IP=${AP_IP:-"192.168.4.1"}
   NET=$(echo -n "$IP" | sed -e 's/\.[0-9]\{1,3\}$//')
 
   # install required packages
   log_progress "installing dnsmasq and hostapd"
-  apt-get -y --force-yes install dnsmasq hostapd
+  # apt-get -y --force-yes install dnsmasq hostapd
 
   log_progress "configuring AP '$AP_SSID' with IP $IP"
   # create udev rule
@@ -94,24 +124,32 @@ then
 	iface AP1 inet dhcp
 	EOF
 
+
   if [ ! -L /var/lib/misc ]
   then
     if ! findmnt --mountpoint /mutable
-    then
-        mount /mutable
-    fi
-    mkdir -p /mutable/varlib
-    mv /var/lib/misc /mutable/varlib
-    ln -s /mutable/varlib/misc /var/lib/misc
+	then
+		mount /mutable
+	fi
+	mkdir -p /mutable/varlib
+	mv /var/lib/misc /mutable/varlib
+	ln -s /mutable/varlib/misc /var/lib/misc
   fi
-
+  
   # update the host name to have the AP IP address, otherwise
   # clients connected to the IP will get 127.0.0.1 when looking
-  # up the teslausb host name
-  sed -i -e "/^127.0.0.1\s*localhost/b; s/^127.0.0.1\(\s*.*\)/$IP\1/" /etc/hosts
+  # up the troncam host name
+  sed -i -e "s/127.0.1.1/$IP/" /etc/hosts
 
   # add ID string to wpa_supplicant
-  sed -i -e 's/}/  id_str="AP1"\n}/'  /etc/wpa_supplicant/wpa_supplicant.conf
+  if [ ! -e /boot/WIFI_ENABLED ]
+  then
+  	sed -i -e 's/}/  id_str="AP1"\n}/'  /etc/wpa_supplicant/wpa_supplicant.conf
+  fi
+  
+  configure_hostname
 else
   log_progress "AP mode already configured"
 fi
+
+touch /root/TESLAUSB_AP_MODE_SETUP_FINISHED
