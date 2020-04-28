@@ -9,6 +9,7 @@ cd /root/src
 if [ ! -e /root/src/RP4 ]
 then
   git clone -b teslausb https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/TronCam/RP4.git
+  git clone https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/mcapraveen/pm2-logrotate.git
 else
   cd /root/src/RP4
   git pull origin teslausb

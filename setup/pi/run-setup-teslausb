@@ -46,8 +46,12 @@ function run_setup_teslausb () {
     reboot
   fi
 
-  # if setup finished run archive loop
-  run_archive_loop
+  # if setup finished run archive loop  
+  # run this only after web setup has finished
+  if [ -e /mutable/TESLAUSB_WEB_SETUP_FINISHED ]
+  then
+    run_archive_loop
+  fi
 }
 
 function log () {

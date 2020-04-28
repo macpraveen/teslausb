@@ -43,7 +43,7 @@ function enable_wifi () {
         then
           source "/root/teslausb_setup_variables.conf"
         fi
-        
+
         # set the host name now if possible, so it's effective immediately after the reboot
         local old_host_name
         old_host_name=$(cat /etc/hostname)
@@ -52,6 +52,12 @@ function enable_wifi () {
           local new_host_name="$TESLAUSB_HOSTNAME"
           sed -i -e "s/$old_host_name/$new_host_name/g" /etc/hosts
           sed -i -e "s/$old_host_name/$new_host_name/g" /etc/hostname
+        fi
+
+        # add ID string to wpa_supplicant
+        if ! grep -q id_str /etc/wpa_supplicant/wpa_supplicant.conf
+        then
+          sed -i -e 's/}/  id_str="AP1"\n}/'  /etc/wpa_supplicant/wpa_supplicant.conf
         fi
         
         touch /boot/WIFI_ENABLED

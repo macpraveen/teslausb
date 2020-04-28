@@ -29,13 +29,11 @@ function setup_progress () {
 function setup_ap_ssid_pass () {
   if [ ! -e /root/TESLAUSB_AP_MODE_SETUP_FINISHED ]
   then
-    if [ ! -e "/boot/teslausb_setup_variables.conf" ]
+    if [ -e "/root/teslausb_setup_variables.conf" ]
     then
       # remountfs_rw
       /root/bin/remountfs_rw
-
-      # rename sample as conf file
-      mv /boot/teslausb_setup_variables.conf.sample /boot/teslausb_setup_variables.conf
+      
       local mac_addr
       mac_addr=$(cat /sys/class/net/wlan0/address)
       # remove ":" in mac addr
@@ -43,12 +41,8 @@ function setup_ap_ssid_pass () {
       local ap_ssid="TC-${mac_addr}"
       local ap_pass=${mac_addr}
       # replace YOUR_AP_SSID and YOUR_AP_PASSWORD with AP_SSID and AP_PASSWORD
-      sed -i -e "s/YOUR_AP_SSID/$ap_ssid/g" /boot/teslausb_setup_variables.conf
-      sed -i -e "s/YOUR_AP_PASSWORD/$ap_pass/g" /boot/teslausb_setup_variables.conf
-      
-      mv /boot/teslausb_setup_variables.conf /root/
-      dos2unix /root/teslausb_setup_variables.conf
-      source "/root/teslausb_setup_variables.conf"
+      sed -i -e "s/YOUR_AP_SSID/$ap_ssid/g" /root/teslausb_setup_variables.conf
+      sed -i -e "s/YOUR_AP_PASSWORD/$ap_pass/g" /root/teslausb_setup_variables.conf
 
       # configure ap mode
       /root/bin/configure-ap.sh
@@ -57,18 +51,17 @@ function setup_ap_ssid_pass () {
   fi
 }
 
-# this replaces YOUR_AP_SSID with TC-<mac addr> and password as <mac addr>
-setup_ap_ssid_pass
-
-if [ -e "/boot/teslausb_setup_variables.conf" ]
+if [ -e "/boot/teslausb_setup_variables.conf.sample" ]
 then
   if [ -e /root/bin/remountfs_rw ]
   then
     /root/bin/remountfs_rw
   fi
-  mv /boot/teslausb_setup_variables.conf /root/
+  # rename sample as conf file
+  mv /boot/teslausb_setup_variables.conf.sample /root/teslausb_setup_variables.conf
   dos2unix /root/teslausb_setup_variables.conf
 fi
+
 if [ -e "/root/teslausb_setup_variables.conf" ]
 then
   source "/root/teslausb_setup_variables.conf"
@@ -82,24 +75,35 @@ fi
 
 /root/bin/run-setup-teslausb
 
+# this replaces YOUR_AP_SSID with TC-<mac addr> and password as <mac addr>
+setup_ap_ssid_pass
+
 # run this only after web setup has finished
 if [ -e /mutable/TESLAUSB_WEB_SETUP_FINISHED ]
 then
   /root/bin/enable_wifi
-
-  mkdir -p /mutable/pm2
-  export PM2_HOME='/mutable/pm2'
-  # max file size of 1 mb
-  pm2 set pm2-logrotate:max_size 1M
-  # retain last 12 files
-  pm2 set pm2-logrotate:retain 12
-  # compress log files
-  pm2 set pm2-logrotate:compress true
-  # run every hour
-  pm2 set pm2-logrotate:rotateInterval '* */1 * * *'
-
-  PM2_HOME='/mutable/pm2' pm2 start --env production /root/src/RP4/ecosystem.config.js
-
 fi
+
+mkdir -p /mutable/pm2
+export PM2_HOME='/mutable/pm2'
+
+if [ ! -d /mutable/pm2/modules/pm2-logrotate ]
+then
+  /root/bin/remountfs_rw
+  cp -r /root/src/pm2-logrotate /mutable/pm2/
+  pm2 install file:///mutable/pm2/pm2-logrotate
+  pm2 update
+fi
+
+# max file size of 1 mb
+pm2 set pm2-logrotate:max_size 1M
+# retain last 12 files
+pm2 set pm2-logrotate:retain 7
+# compress log files
+pm2 set pm2-logrotate:compress true
+# run every day
+pm2 set pm2-logrotate:rotateInterval '0 0 0 */1 * *'
+
+PM2_HOME='/mutable/pm2' pm2 start --env production /root/src/RP4/ecosystem.config.js
 
 exit 0

@@ -52,7 +52,7 @@ then
   exit 1
 fi
 
-if ! grep -q id_str /etc/wpa_supplicant/wpa_supplicant.conf
+if [ ! -e /root/TESLAUSB_AP_MODE_SETUP_FINISHED ]
 then
   IP=${AP_IP:-"192.168.4.1"}
   NET=$(echo -n "$IP" | sed -e 's/\.[0-9]\{1,3\}$//')
@@ -141,15 +141,10 @@ then
   # up the troncam host name
   sed -i -e "s/127.0.1.1/$IP/" /etc/hosts
 
-  # add ID string to wpa_supplicant
-  if [ ! -e /boot/WIFI_ENABLED ]
-  then
-  	sed -i -e 's/}/  id_str="AP1"\n}/'  /etc/wpa_supplicant/wpa_supplicant.conf
-  fi
-  
-  configure_hostname
 else
   log_progress "AP mode already configured"
 fi
+
+configure_hostname
 
 touch /root/TESLAUSB_AP_MODE_SETUP_FINISHED
