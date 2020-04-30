@@ -292,45 +292,45 @@ function archive_teslacam_clips () {
   
     if [ "$DIR_COUNT" -gt 0 ]
     then
-        log "Starting recording archiving: $DIR_COUNT event folder(s) with $FILE_COUNT file(s)"
+      log "Starting recording archiving: $DIR_COUNT event folder(s) with $FILE_COUNT file(s)"
 
-        /root/bin/send-push-message "TeslaUSB:" "Archiving $DIR_COUNT event folder(s) with $FILE_COUNT file(s) starting at $(date)"
+      /root/bin/send-push-message "TeslaUSB:" "Archiving $DIR_COUNT event folder(s) with $FILE_COUNT file(s) starting at $(date)"
 
-        # Ensure Sentry Mode is enabled before archiving
-        declare is_sentry_mode_enabled
-        if [ -x /root/bin/tesla_api.py ]
+      # Ensure Sentry Mode is enabled before archiving
+      declare is_sentry_mode_enabled
+      if [ -x /root/bin/tesla_api.py ]
+      then
+          is_sentry_mode_enabled=$(/root/bin/tesla_api.py is_sentry_mode_enabled | tr '[:upper:]' '[:lower:]')
+          if [ "false" = "${is_sentry_mode_enabled}" ]
+          then
+              log "Temporarily enabling Sentry Mode to power the RPi while archive job completes..."
+              /root/bin/tesla_api.py enable_sentry_mode &>> ${LOG_FILE}
+          fi
+      fi
+
+      # Create trigger file for SavedClips
+      if [ ! -z "${ARCHIVE_TRIGGER_SAVED+x}" ]
+      then 
+          export ARCHIVE_TRIGGER_SAVED
+      fi
+
+      # Create trigger file for SentryClips
+      if [ ! -z "${ARCHIVE_TRIGGER_SENTRY+x}" ]
+      then 
+          export ARCHIVE_TRIGGER_SENTRY
+      fi
+    
+      /root/bin/${ARCHIVE_SYSTEM:-none}_archive/archive-clips.sh
+
+      # If Sentry Mode was previously disabled, restore it to that state
+      if [ -x /root/bin/tesla_api.py ]
+      then
+        if [ "false" = "${is_sentry_mode_enabled}" ]
         then
-            is_sentry_mode_enabled=$(/root/bin/tesla_api.py is_sentry_mode_enabled | tr '[:upper:]' '[:lower:]')
-            if [ "false" = "${is_sentry_mode_enabled}" ]
-            then
-                log "Temporarily enabling Sentry Mode to power the RPi while archive job completes..."
-                /root/bin/tesla_api.py enable_sentry_mode &>> ${LOG_FILE}
-            fi
+            log "Restoring Sentry Mode to its previous state (disabled)..."
+              /root/bin/tesla_api.py disable_sentry_mode &>> ${LOG_FILE}
         fi
-
-	# Create trigger file for SavedClips
-	if [ ! -z "${ARCHIVE_TRIGGER_SAVED+x}" ]
-	then 
-	    export ARCHIVE_TRIGGER_SAVED
-	fi
-
-	# Create trigger file for SentryClips
-	if [ ! -z "${ARCHIVE_TRIGGER_SENTRY+x}" ]
-	then 
-	    export ARCHIVE_TRIGGER_SENTRY
-	fi
-	    
-        /root/bin/${ARCHIVE_SYSTEM:-none}_archive/archive-clips.sh
-
-        # If Sentry Mode was previously disabled, restore it to that state
-        if [ -x /root/bin/tesla_api.py ]
-        then
-	    if [ "false" = "${is_sentry_mode_enabled}" ]
-	    then
-	        log "Restoring Sentry Mode to its previous state (disabled)..."
-   	         /root/bin/tesla_api.py disable_sentry_mode &>> ${LOG_FILE}
-	    fi
-	fi
+      fi
     fi
 
     # Trim the camera archive to reduce the number of blocks in the snapshot.
