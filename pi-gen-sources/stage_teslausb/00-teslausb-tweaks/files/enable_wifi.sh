@@ -16,7 +16,7 @@ fi
 function setup_progress () {
   if [ $HEADLESS_SETUP = "true" ]
   then
-    SETUP_LOGFILE=/boot/teslausb-headless-setup.log
+    SETUP_LOGFILE=/mutable/enable-wifi.log
     echo "$( date ) : $1" >> "$SETUP_LOGFILE"
   fi
     echo "$1"
