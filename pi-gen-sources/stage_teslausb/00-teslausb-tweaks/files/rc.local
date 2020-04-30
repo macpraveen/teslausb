@@ -44,9 +44,10 @@ function setup_ap_ssid_pass () {
       sed -i -e "s/YOUR_AP_SSID/$ap_ssid/g" /root/teslausb_setup_variables.conf
       sed -i -e "s/YOUR_AP_PASSWORD/$ap_pass/g" /root/teslausb_setup_variables.conf
 
+      source "/root/teslausb_setup_variables.conf"
+
       # configure ap mode
       /root/bin/configure-ap.sh
-      reboot
     fi
   fi
 }
@@ -73,28 +74,46 @@ then
   HEADLESS_SETUP=false
 fi
 
-/root/bin/run-setup-teslausb
-
-# this replaces YOUR_AP_SSID with TC-<mac addr> and password as <mac addr>
-setup_ap_ssid_pass
-
-# run this only after web setup has finished
-if [ -e /mutable/TESLAUSB_WEB_SETUP_FINISHED ]
-then
-  /root/bin/enable_wifi
-fi
-
 mkdir -p /mutable/pm2
-export PM2_HOME='/mutable/pm2'
+export PM2_HOME=/mutable/pm2
 
 if [ ! -d /mutable/pm2/modules/pm2-logrotate ]
 then
-  /root/bin/remountfs_rw
   cp -r /root/src/pm2-logrotate /mutable/pm2/
   pm2 install file:///mutable/pm2/pm2-logrotate
   pm2 update
 fi
 
+systemctl stop wpa_supplicant.service
+systemctl disable wpa_supplicant.service
+
+/root/bin/run-setup-teslausb
+
+# this replaces YOUR_AP_SSID with TC-<mac addr> and password as <mac addr>
+setup_ap_ssid_pass
+
+echo 'Starting Wifi AP and client...'
+#sleep 30
+#sudo ifdown --force wlan0
+#sudo ifdown --force ap0
+#sudo ifup ap0
+#sudo ifup wlan0
+
+AP_IP_BEGIN=`echo "${AP_IP}" | sed -e 's/\.[0-9]\{1,3\}$//g'`
+
+sysctl -w net.ipv4.ip_forward=1
+iptables -t nat -A POSTROUTING -s ${AP_IP_BEGIN}.0/24 ! -d ${AP_IP_BEGIN}.0/24 -j MASQUERADE
+#systemctl restart dnsmasq
+
+
+# run this only after web setup has finished
+if [ -e /mutable/TESLAUSB_WEB_SETUP_FINISHED ]
+then
+  /root/bin/enable_wifi.sh
+fi
+
+export PM2_HOME=/mutable/pm2
+setup_progress "PM2 start"
 # max file size of 1 mb
 pm2 set pm2-logrotate:max_size 1M
 # retain last 12 files
@@ -104,6 +123,7 @@ pm2 set pm2-logrotate:compress true
 # run every day
 pm2 set pm2-logrotate:rotateInterval '0 0 0 */1 * *'
 
-PM2_HOME='/mutable/pm2' pm2 start --env production /root/src/RP4/ecosystem.config.js
+pm2 start --env production /root/src/RP4/ecosystem.config.js
 
+setup_progress "PM2 end"
 exit 0

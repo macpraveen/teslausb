@@ -40,6 +40,8 @@ function log_progress () {
   echo "configure-ap: $1"
 }
 
+configure_hostname
+
 if [ -z "${AP_SSID+x}" ]
 then
   log_progress "AP_SSID not set"
@@ -73,7 +75,7 @@ then
   # configure dnsmasq
   cat <<- EOF > /etc/dnsmasq.conf
 	interface=lo,ap0
-	no-dhcp-interface=lo,wlan0
+	no-dhcp-interface=lo,eth0,wlan0
 	bind-interfaces
 	bogus-priv
 	dhcp-range=${NET}.100,${NET}.150,12h
@@ -108,9 +110,13 @@ then
 	source-directory /etc/network/interfaces.d
 
 	auto lo
+	auto eth0
 	auto ap0
 	auto wlan0
 	iface lo inet loopback
+
+	allow-hotplug eth0
+	iface eth0 inet dhcp
 
 	allow-hotplug ap0
 	iface ap0 inet static
@@ -123,7 +129,6 @@ then
 	    wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
 	iface AP1 inet dhcp
 	EOF
-
 
   if [ ! -L /var/lib/misc ]
   then
@@ -141,10 +146,12 @@ then
   # up the troncam host name
   sed -i -e "s/127.0.1.1/$IP/" /etc/hosts
 
+  touch /root/TESLAUSB_AP_MODE_SETUP_FINISHED
+  
+  systemctl stop dhcpcd
+  systemctl disable dhcpcd
+
+  reboot
 else
   log_progress "AP mode already configured"
 fi
-
-configure_hostname
-
-touch /root/TESLAUSB_AP_MODE_SETUP_FINISHED
