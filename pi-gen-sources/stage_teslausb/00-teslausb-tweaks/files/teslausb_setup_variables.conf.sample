@@ -11,7 +11,7 @@
 ######################################################################
 
 # Default variables for CIFS (Windows/Mac file sharing) setup
-export ARCHIVE_SYSTEM=cifs
+export ARCHIVE_SYSTEM=none
 export archiveserver=your_archive_name_or_ip
 export sharename=your_archive_share_name
 export shareuser=username
