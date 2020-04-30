@@ -120,8 +120,8 @@ setup_progress "Checking existing partitions..."
 
 DISK_SECTORS=$(blockdev --getsz /dev/mmcblk0)
 LAST_DISK_SECTOR=$((DISK_SECTORS - 1))
-# mutable partition is 100MB at the end of the disk, calculate its start sector
-FIRST_MUTABLE_SECTOR=$((LAST_DISK_SECTOR-204800+1))
+# mutable partition is 1000MB at the end of the disk, calculate its start sector
+FIRST_MUTABLE_SECTOR=$((LAST_DISK_SECTOR-2048000+1))
 # backingfiles partition sits between the root and mutable partition, calculate its start sector and size
 LAST_ROOT_SECTOR=$(sfdisk -l /dev/mmcblk0 | grep mmcblk0p2 | awk '{print $3}')
 FIRST_BACKINGFILES_SECTOR=$((LAST_ROOT_SECTOR + 1))
