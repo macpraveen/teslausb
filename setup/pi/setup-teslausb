@@ -531,6 +531,17 @@ then
   fi
 fi
 
+if [ ! -L /var/lib/dhcp ]
+then
+  if ! findmnt --mountpoint /mutable
+  then
+    mount /mutable
+  fi
+  mkdir -p /mutable/varlib
+  mv /var/lib/dhcp /mutable/varlib
+  ln -s /mutable/varlib/dhcp /var/lib/dhcp
+fi
+
 make_root_fs_readonly
 
 # upgrade_packages
