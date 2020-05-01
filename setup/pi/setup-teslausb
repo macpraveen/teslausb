@@ -542,6 +542,19 @@ then
   ln -s /mutable/varlib/dhcp /var/lib/dhcp
 fi
 
+mkdir -p /mutable/pm2
+export PM2_HOME=/mutable/pm2
+
+if [ ! -d /mutable/pm2/modules/pm2-logrotate ]
+then
+  cp -r /root/src/pm2-logrotate /mutable/pm2/
+  pm2 install file:///mutable/pm2/pm2-logrotate
+  pm2 update
+fi
+
+systemctl stop wpa_supplicant.service
+systemctl disable wpa_supplicant.service
+
 make_root_fs_readonly
 
 # upgrade_packages
@@ -557,3 +570,6 @@ if [ -t 0 ]
 then
   setup_progress '(reboot now for changes to take effect)'
 fi
+
+# reboot for good measure, also restarts the rc.local script
+reboot

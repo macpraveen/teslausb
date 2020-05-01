@@ -41,9 +41,7 @@ function run_setup_teslausb () {
 
     # Start setup. This should take us all the way through to reboot
     /root/bin/setup-teslausb
-
-    # reboot for good measure, also restarts the rc.local script
-    reboot
+    
   fi
 
   # if setup finished run archive loop  
