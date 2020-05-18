@@ -110,9 +110,9 @@ then
 	source-directory /etc/network/interfaces.d
 
 	auto lo
-	auto eth0
-	auto ap0
-	auto wlan0
+	#auto eth0
+	#auto ap0
+	#auto wlan0
 	iface lo inet loopback
 
 	allow-hotplug eth0
@@ -148,8 +148,9 @@ then
 
   touch /root/TESLAUSB_AP_MODE_SETUP_FINISHED
   
-  systemctl stop dhcpcd
-  systemctl disable dhcpcd
+	systemctl disable hostapd
+	#systemctl stop dhcpcd
+  #systemctl disable dhcpcd
 
   reboot
 else
